@@ -42,6 +42,13 @@ const teamSchema = mongoose.Schema({
 });
 const TeamModel = mongoose.model('teams', teamSchema);
 
+//permet d'avoir un résultat visuel meilleur que 'not found' quand on fait app start sur Heroku
+//on peut aussi faire une requete sur une bdd pour s'assurer que tout fonctionne
+router.get('/', function(req, res, next){
+  res.json({result:true})
+})
+
+
 router.post('/teams', function(req, res, next) {
   unirest.get("https://api-football-v1.p.mashape.com/teams/league/207")
   .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
