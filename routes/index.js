@@ -164,33 +164,19 @@ router.get('/standings', function(req, res, next) {
 });
 
 
-// var statistics = (team) => {
-//   return new Promise(resolve => {
-//     unirest.get(`https://api-football-v1.p.mashape.com/statistics/${saisonEnCours}/${team}`)
-//       .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
-//       .header("Accept", "application/json")
-//       .end(function(result) {
-//         //nb de matchs récupérés : result.body.api.results >> 132, 11/équipes
-//         // console.log("LEAGUE 207 NB DE MATCH : ", result.body.api.results);
-//         //result.body.api.fixtures : retourne un objet avec tous les id de fixtures
-//         console.log("LEAGUE 207 CLASSEMENT : ", result.body);
-//         resolve(result.body);
-//       });
-//   })
-// }
-//
-// router.get('/statistics', function(req, res, next) {
-//   var team= req.teamApi_id;
-//   unirest.get(`https://api-football-v1.p.mashape.com/statistics/${saisonEnCours}/${team}`)
-//     .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
-//     .header("Accept", "application/json")
-//     .end(function(result) {
-//       //nb de matchs récupérés : result.body.api.results >> 132, 11/équipes
-//       // console.log("LEAGUE 207 NB DE MATCH : ", result.body.api.results);
-//       //result.body.api.fixtures : retourne un objet avec tous les id de fixtures
-//       console.log("LEAGUE 207 CLASSEMENT : ", result.body);
-//     });
-// });
+router.get('/statistics/:teamApi_id', function(req, res, next) {
+
+  var team= req.params.teamApi_id;
+  unirest.get(`https://api-football-v1.p.mashape.com/statistics/${saisonEnCours}/${team}`)
+    .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
+    .header("Accept", "application/json")
+    .end(function(result) {
+      //nb de matchs récupérés : result.body.api.results >> 132, 11/équipes
+      // console.log("LEAGUE 207 NB DE MATCH : ", result.body.api.results);
+      //result.body.api.fixtures : retourne un objet avec tous les id de fixtures
+      console.log("LEAGUE 207 CLASSEMENT : ", result.body);
+    });
+});
 
 
 
