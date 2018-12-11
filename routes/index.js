@@ -163,6 +163,25 @@ router.get('/standings', function(req, res, next) {
 });
 
 
+
+//   **********        RECUPERATION DES MATCHS PAR EQUIPE  :  FIXTURES/TEAM  *********    //////////////////
+
+//attend https://adresseDuBack/statistics/teamApi_id
+router.get('/fixtures/team/:id', function(req, res) {
+  console.log ("route fixtures/team")
+  var team= req.params.id;
+  // console.log("req.params.teamApi_id : ", req.params.id)
+  unirest.get(`https://api-football-v1.p.mashape.com/fixtures/team/${team}`)
+    .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
+    .header("Accept", "application/json")
+    .end(function(result) {
+      console.log("LEAGUE 207 STAT : ", result.body);
+      res.json({resultat: result.body.api})
+    });
+});
+
+
+
 //   **********        RECUPERATION DES STATS  :  STANDINGS  *********    //////////////////
 
 //attend https://adresseDuBack/statistics/teamApi_id
