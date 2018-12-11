@@ -163,10 +163,25 @@ router.get('/standings', function(req, res, next) {
   }
 });
 
+//le :teamApi_id dit qu'on utilise un paramètre
+// router.get('/statistics/:teamApi_id', function(req, res, next) {
+//
+//   var team= req.params.teamApi_id;
+//   unirest.get(`https://api-football-v1.p.mashape.com/statistics/${saisonEnCours}/${team}`)
+//     .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
+//     .header("Accept", "application/json")
+//     .end(function(result) {
+//       //nb de matchs récupérés : result.body.api.results >> 132, 11/équipes
+//       // console.log("LEAGUE 207 NB DE MATCH : ", result.body.api.results);
+//       //result.body.api.fixtures : retourne un objet avec tous les id de fixtures
+//       console.log("LEAGUE 207 STAT : ", result.body);
+//     });
+// });
 
-router.get('/statistics/:teamApi_id', function(req, res, next) {
-
-  var team= req.params.teamApi_id;
+router.get('/statistics/:id', function(req, res) {
+  console.log ("route statistiques")
+  var team= req.params.id;
+  // console.log("req.params.teamApi_id : ", req.params.id)
   unirest.get(`https://api-football-v1.p.mashape.com/statistics/${saisonEnCours}/${team}`)
     .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
     .header("Accept", "application/json")
@@ -174,10 +189,10 @@ router.get('/statistics/:teamApi_id', function(req, res, next) {
       //nb de matchs récupérés : result.body.api.results >> 132, 11/équipes
       // console.log("LEAGUE 207 NB DE MATCH : ", result.body.api.results);
       //result.body.api.fixtures : retourne un objet avec tous les id de fixtures
-      console.log("LEAGUE 207 CLASSEMENT : ", result.body);
+      console.log("LEAGUE 207 STAT : ", result.body);
+      res.json({result: result.body})
     });
 });
-
 
 
 module.exports = router;
