@@ -109,6 +109,8 @@ router.get('/teams', function(req, res, next) {
 //   });
 // }
 
+
+//   **********        RECUPERATION DES MATCHS :  FIXTURES :  *********    //////////////////
 var fixtures = () => {
   return new Promise(resolve => {
     unirest.get(`https://api-football-v1.p.mashape.com/fixtures/league/${saisonEnCours}`)
@@ -116,8 +118,6 @@ var fixtures = () => {
       .header("Accept", "application/json")
       .end(function(result) {
         //nb de matchs récupérés : result.body.api.results >> 132, 11/équipes
-        // console.log("LEAGUE 207 NB DE MATCH : ", result.body.api.results);
-        //result.body.api.fixtures : retourne un objet avec tous les id de fixtures
         console.log("LEAGUE 207 RENCONTRES : ", result.body.api.fixtures);
         resolve(result.body.api.fixtures);
       });
@@ -136,16 +136,15 @@ router.get('/fixtures', function(req, res, next) {
 });
 
 
+//   **********        RECUPERATION DU CLASSEMENT :  STANDINGS  *********    //////////////////
+
 var standings = () => {
   return new Promise(resolve => {
     unirest.get(`https://api-football-v1.p.mashape.com/standings/${saisonEnCours}`)
       .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
       .header("Accept", "application/json")
       .end(function(result) {
-        //nb de matchs récupérés : result.body.api.results >> 132, 11/équipes
-        // console.log("LEAGUE 207 NB DE MATCH : ", result.body.api.results);
-        //result.body.api.fixtures : retourne un objet avec tous les id de fixtures
-        console.log("LEAGUE 207 CLASSEMENT : ", result.body.api.standings);
+        // console.log("LEAGUE 207 CLASSEMENT : ", result.body.api.standings);
         resolve(result.body.api.standings);
       });
   })
@@ -163,21 +162,10 @@ router.get('/standings', function(req, res, next) {
   }
 });
 
-//le :teamApi_id dit qu'on utilise un paramètre
-// router.get('/statistics/:teamApi_id', function(req, res, next) {
-//
-//   var team= req.params.teamApi_id;
-//   unirest.get(`https://api-football-v1.p.mashape.com/statistics/${saisonEnCours}/${team}`)
-//     .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
-//     .header("Accept", "application/json")
-//     .end(function(result) {
-//       //nb de matchs récupérés : result.body.api.results >> 132, 11/équipes
-//       // console.log("LEAGUE 207 NB DE MATCH : ", result.body.api.results);
-//       //result.body.api.fixtures : retourne un objet avec tous les id de fixtures
-//       console.log("LEAGUE 207 STAT : ", result.body);
-//     });
-// });
 
+//   **********        RECUPERATION DES STATS  :  STANDINGS  *********    //////////////////
+
+//attend https://adresseDuBack/statistics/teamApi_id
 router.get('/statistics/:id', function(req, res) {
   console.log ("route statistiques")
   var team= req.params.id;
@@ -186,11 +174,8 @@ router.get('/statistics/:id', function(req, res) {
     .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
     .header("Accept", "application/json")
     .end(function(result) {
-      //nb de matchs récupérés : result.body.api.results >> 132, 11/équipes
-      // console.log("LEAGUE 207 NB DE MATCH : ", result.body.api.results);
-      //result.body.api.fixtures : retourne un objet avec tous les id de fixtures
       console.log("LEAGUE 207 STAT : ", result.body);
-      res.json({result: result.body})
+      res.json({result: result.body.api.stats})
     });
 });
 
