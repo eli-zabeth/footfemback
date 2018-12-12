@@ -6,11 +6,13 @@ const mongoose = require('mongoose');
 /* ----- Votre DB ------ */
 const dbUrl = 'mongodb://footfem:mongoFF2018@ds129914.mlab.com:29914/footfem';
 /* --------------------- */
-var saisonEnCours = 207;
-// console.log(saisonEnCours)
+var saisonEnCoursD1 = 207;
+// console.log(saisonEnCoursD1)
 /* --------------------- */
 
 
+
+/* ************************    MONGOOSE  ******************************/
 
 const options = {
   connectTimeoutMS: 5000,
@@ -24,6 +26,15 @@ mongoose.connect(dbUrl, options, error => {
   }
 });
 
+const db = {
+  config: {
+    url: 'mongodb://footfem:mongoFF2018@ds129914.mlab.com:29914/footfem',
+    options: {
+      connectTimeoutMS: 5000,
+      useNewUrlParser: true
+    }
+  }
+};
 
 
 const teamSchema = mongoose.Schema({
@@ -42,13 +53,28 @@ const teamSchema = mongoose.Schema({
 });
 const TeamModel = mongoose.model('teams', teamSchema);
 
-//permet d'avoir un résultat visuel meilleur que 'not found' quand on fait app start sur Heroku
-//on peut aussi faire une requete sur une bdd pour s'assurer que tout fonctionne
+const journeeSchema = mongoose.Schema({
+    round : Number,
+    fixtures : [
+      {
+        fixtures_api_id : Number,
+      }
+    ]
+});
+const JourneeModel = mongoose.model('journees', journeeSchema);
+
+
+/***********************************************************************/
+
+
+/*permet d'avoir un résultat visuel meilleur que 'not found' quand on fait app start sur Heroku
+on peut aussi faire une requete sur une bdd pour s'assurer que tout fonctionne */
 router.get('/', function(req, res, next){
   res.json({result:true})
 })
+/**/
 
-
+/********************   ajout des équipes dans la bdd   ***********************/
 router.post('/teams', function(req, res, next) {
   unirest.get("https://api-football-v1.p.mashape.com/teams/league/207")
   .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
@@ -78,6 +104,64 @@ router.post('/teams', function(req, res, next) {
 })
 
 
+/********************   ajout des journees   ***********************/
+router.post('/journees', function(req, res, next) {
+  for (var i = 1; i <= 22; i++) {
+    var newJournee = new JourneeModel({
+      round: i,
+    });
+    newJournee.save((error, journee) => {
+      if (error) {
+        console.error(error);
+      } else {
+        console.log({
+          journee: journee
+        });
+      };
+    });
+  }; // for terminé
+  unirest.get(`https://api-football-v1.p.mashape.com/fixtures/league/${saisonEnCoursD1}`)
+    .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
+    .header("Accept", "application/json")
+    .end(function(result) {
+      var match = Object.keys(result.body.api.fixtures);
+      var matchs = result.body.api.fixtures;
+      for (var z in matchs) {
+        //on récupère le round
+        //crée un tableau de tous les mots sans les espaces
+        var roundS = matchs[z].round.split(' ');
+        //récupère le dernier élément du tableau >> le numéro de la journée
+        var roundN = parseInt(roundS[roundS.length-1])
+        // console.log("roundN : ", roundN);
+        // var roundN = parseInt(matchs[z].round.substring(28));
+        // console.log("roundN : ", roundN);
+        JourneeModel.findOneAndUpdate({
+          round: roundN
+        }, {
+          $push: {
+            fixtures: {
+              fixtures_api_id: matchs[z].fixture_id
+            }
+          }
+        }, {
+          new: true
+        }, (error, journee) => {
+          if (error || !journee) {
+            console.error(error ? error : 'journee not found');
+          } else {
+            // console.log(journee);
+            // res.json(journee)
+          };
+        });
+      }; // for terminé
+      res.json(result.body.api.fixtures);
+    });
+})
+
+
+
+
+//   **********        RECUPERATION DES EQUIPES :  TEAMS :  *********    //////////////////
 router.get('/teams', function(req, res, next) {
   TeamModel.find(function(err, teams) {
         if (err) {
@@ -87,6 +171,19 @@ router.get('/teams', function(req, res, next) {
         res.json({teams});
       });
 });
+
+
+
+//   **********        RECUPERATION DES JOURNEES :  ROUND:  *********    //////////////////
+// router.get('/journees', function(req, res, next) {
+//   JourneeModel.find(function(err, journees) {
+//         if (err) {
+//           console.log(error);
+//         }
+//         console.log("les journées en base : ", journees)
+//         res.json({journees});
+//       });
+// });
 
 
 //PERMET DE RETOURNER LA SAISON EN COURS AVEC L'ID DE LA LIGUE QUI VA SERVIR POUR LES REQUETES
@@ -113,12 +210,12 @@ router.get('/teams', function(req, res, next) {
 //   **********        RECUPERATION DES MATCHS :  FIXTURES :  *********    //////////////////
 var fixtures = () => {
   return new Promise(resolve => {
-    unirest.get(`https://api-football-v1.p.mashape.com/fixtures/league/${saisonEnCours}`)
+    unirest.get(`https://api-football-v1.p.mashape.com/fixtures/league/${saisonEnCoursD1}`)
       .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
       .header("Accept", "application/json")
       .end(function(result) {
         //nb de matchs récupérés : result.body.api.results >> 132, 11/équipes
-        console.log("LEAGUE 207 RENCONTRES : ", result.body.api.fixtures);
+        // console.log("LEAGUE 207 RENCONTRES : ", result.body.api.fixtures);
         resolve(result.body.api.fixtures);
       });
   })
@@ -126,9 +223,10 @@ var fixtures = () => {
 
 router.get('/fixtures', function(req, res, next) {
   try {
-    fixtures().then((resultat) => {
-      console.log("resultat  :  ", resultat);
-      res.json({ resultat });
+    fixtures().then((matchs) => {
+      // console.log("matchs  :  ", matchs);
+
+      res.json({ matchs });
     })
   } catch (e) {
     console.log(e);
@@ -140,7 +238,7 @@ router.get('/fixtures', function(req, res, next) {
 
 var standings = () => {
   return new Promise(resolve => {
-    unirest.get(`https://api-football-v1.p.mashape.com/standings/${saisonEnCours}`)
+    unirest.get(`https://api-football-v1.p.mashape.com/standings/${saisonEnCoursD1}`)
       .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
       .header("Accept", "application/json")
       .end(function(result) {
@@ -163,7 +261,6 @@ router.get('/standings', function(req, res, next) {
 });
 
 
-
 //   **********        RECUPERATION DES MATCHS PAR EQUIPE  :  FIXTURES/TEAM  *********    //////////////////
 
 //attend https://adresseDuBack/statistics/teamApi_id
@@ -181,7 +278,6 @@ router.get('/fixtures/team/:id', function(req, res) {
 });
 
 
-
 //   **********        RECUPERATION DES STATS  :  STANDINGS  *********    //////////////////
 
 //attend https://adresseDuBack/statistics/teamApi_id
@@ -189,7 +285,7 @@ router.get('/statistics/:id', function(req, res) {
   console.log ("route statistiques")
   var team= req.params.id;
   // console.log("req.params.teamApi_id : ", req.params.id)
-  unirest.get(`https://api-football-v1.p.mashape.com/statistics/${saisonEnCours}/${team}`)
+  unirest.get(`https://api-football-v1.p.mashape.com/statistics/${saisonEnCoursD1}/${team}`)
     .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
     .header("Accept", "application/json")
     .end(function(result) {
