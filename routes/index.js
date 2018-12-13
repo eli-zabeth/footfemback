@@ -189,13 +189,31 @@ router.get('/journees/', function(req, res, next) {
 //  **********        RECUPERATION D'UNE JOURNEE :  1ROUND:  *********    ////////////////
 router.get('/journee/:round', function(req, res, next) {
   var roundi = req.params.round;
+  var fixturesJournee=[] ;
   JourneeModel.find({ round: roundi }, function(err, journee) {
     // res.json({journee})
     if (err) {
       console.log(error);
     }
-    console.log("les matchs de la journee : ", journee[0].fixtures)
-    res.json({journee});
+    // console.log("les matchs de la journee : ", journee[0].fixtures[0].fixture_api_id)
+    var matchsJournee = journee[0].fixtures;
+    for (var z of matchsJournee){
+      unirest.get(`https://api-football-v1.p.mashape.com/fixtures/id/${z.fixture_api_id}`)
+      .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
+      .header("Accept", "application/json")
+      .end(function (result) {
+        // console.log("fixturesJournee", fixturesJournee);
+        fixturesJournee.push(result.body.api.fixtures);
+        if (fixturesJournee.length===6){
+          res.json(fixturesJournee);
+        }
+        // console.log(result.body.api.fixtures);
+        // res.json(result.body.api.fixtures);
+      });
+      // console.log("z : ", z)
+      // console.log("les id des matchs de la journee : ", z.fixture_api_id)
+    }//fin du for
+    // res.json({fixturesJournee});
   });
 });
 
