@@ -200,6 +200,19 @@ router.get('/journee/:round', function(req, res, next) {
 });
 
 
+
+//  **********        RECUPERATION DU LIVE :       *********    //////////////////
+router.get('/live/', function(req, res, next) {
+  unirest.get("https://api-football-v1.p.mashape.com/fixtures/live")
+  .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
+  .header("Accept", "application/json")
+  .end(function(result) {
+    console.log(result.status);
+    res.send(result.body.api);
+  });
+});
+
+
 //PERMET DE RETOURNER LA SAISON EN COURS AVEC L'ID DE LA LIGUE QUI VA SERVIR POUR LES REQUETES
 // function leagueId(){
 //   unirest.get("https://api-football-v1.p.mashape.com/leagues/country/france/2018")
@@ -277,7 +290,7 @@ router.get('/standings', function(req, res, next) {
 
 //   **********        RECUPERATION DES MATCHS PAR EQUIPE  :  FIXTURES/TEAM  *********    //////////////////
 
-//attend https://adresseDuBack/statistics/teamApi_id
+//attend https://adresseDuBack/fixtures/teamApi_id
 router.get('/fixtures/team/:id', function(req, res) {
   console.log ("route fixtures/team")
   var team= req.params.id;
@@ -292,7 +305,7 @@ router.get('/fixtures/team/:id', function(req, res) {
 });
 
 
-//   **********        RECUPERATION DES STATS  :  STANDINGS  *********    //////////////////
+//   **********        RECUPERATION DES STATS  :  STATs  *********    //////////////////
 
 //attend https://adresseDuBack/statistics/teamApi_id
 router.get('/statistics/:id', function(req, res) {
