@@ -57,7 +57,7 @@ const journeeSchema = mongoose.Schema({
     round : Number,
     fixtures : [
       {
-        fixtures_api_id : Number,
+        fixture_api_id : Number,
       }
     ]
 });
@@ -140,7 +140,7 @@ router.post('/journees', function(req, res, next) {
         }, {
           $push: {
             fixtures: {
-              fixtures_api_id: matchs[z].fixture_id
+              fixture_api_id: matchs[z].fixture_id
             }
           }
         }, {
@@ -174,16 +174,30 @@ router.get('/teams', function(req, res, next) {
 
 
 
-//   **********        RECUPERATION DES JOURNEES :  ROUND:  *********    //////////////////
-// router.get('/journees', function(req, res, next) {
-//   JourneeModel.find(function(err, journees) {
-//         if (err) {
-//           console.log(error);
-//         }
-//         console.log("les journées en base : ", journees)
-//         res.json({journees});
-//       });
-// });
+//  **********        RECUPERATION DES JOURNEES :  ROUND:  *********    //////////////////
+router.get('/journees/', function(req, res, next) {
+  JourneeModel.find(function(err, journees) {
+        if (err) {
+          console.log(error);
+        }
+        console.log("les journées en base : ", journees)
+        res.json({journees});
+      });
+});
+
+
+//  **********        RECUPERATION D'UNE JOURNEE :  1ROUND:  *********    ////////////////
+router.get('/journee/:round', function(req, res, next) {
+  var roundi = req.params.round;
+  JourneeModel.find({ round: roundi }, function(err, journee) {
+    // res.json({journee})
+    if (err) {
+      console.log(error);
+    }
+    console.log("les matchs de la journee : ", journee[0].fixtures)
+    res.json({journee});
+  });
+});
 
 
 //PERMET DE RETOURNER LA SAISON EN COURS AVEC L'ID DE LA LIGUE QUI VA SERVIR POUR LES REQUETES
