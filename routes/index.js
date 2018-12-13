@@ -55,6 +55,8 @@ const TeamModel = mongoose.model('teams', teamSchema);
 
 const journeeSchema = mongoose.Schema({
     round : Number,
+    timestampMin : Number,
+    timestampMax : Number,
     fixtures : [
       {
         fixture_api_id : Number,
@@ -106,6 +108,7 @@ router.post('/teams', function(req, res, next) {
 
 /********************   ajout des journees   ***********************/
 router.post('/journees', function(req, res, next) {
+  var timestamps=[] ;
   for (var i = 1; i <= 22; i++) {
     var newJournee = new JourneeModel({
       round: i,
@@ -126,8 +129,14 @@ router.post('/journees', function(req, res, next) {
     .end(function(result) {
       var match = Object.keys(result.body.api.fixtures);
       var matchs = result.body.api.fixtures;
+      var timeMax;
+      var timeMin;
       for (var z in matchs) {
         //on récupère le round
+        timestamps.push(matchs[z].event_timestamp);
+        // console.log ("timestamps : ", timestamps);
+        timeMax = Math.max(...timestamps);
+        timeMin = Math.min(...timestamps);
         //crée un tableau de tous les mots sans les espaces
         var roundS = matchs[z].round.split(' ');
         //récupère le dernier élément du tableau >> le numéro de la journée
@@ -138,6 +147,8 @@ router.post('/journees', function(req, res, next) {
         JourneeModel.findOneAndUpdate({
           round: roundN
         }, {
+          timestampMin : timeMax,
+          timestampMax : timeMin,
           $push: {
             fixtures: {
               fixture_api_id: matchs[z].fixture_id
@@ -204,11 +215,10 @@ router.get('/journee/:round', function(req, res, next) {
       .end(function (result) {
         // console.log("fixturesJournee", fixturesJournee);
         fixturesJournee.push(result.body.api.fixtures);
+        //une fois seulement qu'on a récupéré les 6 rencontres
         if (fixturesJournee.length===6){
           res.json(fixturesJournee);
         }
-        // console.log(result.body.api.fixtures);
-        // res.json(result.body.api.fixtures);
       });
       // console.log("z : ", z)
       // console.log("les id des matchs de la journee : ", z.fixture_api_id)
