@@ -77,7 +77,7 @@ router.get('/', function(req, res, next){
 /**/
 
 /********************   ajout des équipes dans la bdd   ***********************/
-router.post('/teams', function(req, res, next) {
+router.post('/teamspost', function(req, res, next) {
   unirest.get("https://api-football-v1.p.mashape.com/teams/league/207")
   .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
   .header("Accept", "application/json")
@@ -107,7 +107,7 @@ router.post('/teams', function(req, res, next) {
 
 
 /********************   ajout des journees   ***********************/
-router.post('/journees', function(req, res, next) {
+router.post('/journeespost', function(req, res, next) {
   for (var i = 1; i <= 22; i++) {
     var newJournee = new JourneeModel({
       round: i,
@@ -155,7 +155,11 @@ router.post('/journees', function(req, res, next) {
           if (error || !journee) {
             console.error(error ? error : 'journee not found');
           } else {
-            // console.log(journee);
+            //pour chaque journee, on cherche le timestamp du match le plus haut et on l'affecte à la journée
+
+            console.log(journee);
+            //récupérer un tableau de toutes les valeurs fixture_timestamp et reaffecter la valeur max à la journee timestampMax
+
             // res.json(journee)
           };
         });
@@ -285,8 +289,8 @@ router.get('/journee/:round', function(req, res, next) {
       .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
       .header("Accept", "application/json")
       .end(function (result) {
-        // console.log("fixturesJournee", fixturesJournee);
-        fixturesJournee.push(result.body.api.fixtures);
+        console.log("fixturesJournee", result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
+        fixturesJournee.push(result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
         //une fois seulement qu'on a récupéré les 6 rencontres
         if (fixturesJournee.length===6){
           res.json({round:roundi, matchs:fixturesJournee});
@@ -302,16 +306,28 @@ router.get('/journee/:round', function(req, res, next) {
 
 
 //  **********        RECUPERATION DU LIVE :       *********    //////////////////
-router.get('/live/', function(req, res, next) {
-  unirest.get("https://api-football-v1.p.mashape.com/fixtures/live")
-  .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
-  .header("Accept", "application/json")
-  .end(function(result) {
-    console.log(result.status);
-    res.send(result.body.api);
-  });
-});
+var live = () => {
+  return new Promise(resolve => {
+      unirest.get("https://api-football-v1.p.mashape.com/fixtures/live")
+      .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
+      .header("Accept", "application/json")
+      .end(function(result) {
+        console.log(result.status);
+        resolve(result.body.api.fixtures);
+      });
+  })
+}
+router.get('/live', function(req, res, next) {
+  try {
+    live().then((matchs) => {
+      // console.log("matchs  :  ", matchs);
 
+      res.json({ matchs });
+    })
+  } catch (e) {
+    console.log(e);
+  }
+});
 
 //PERMET DE RETOURNER LA SAISON EN COURS AVEC L'ID DE LA LIGUE QUI VA SERVIR POUR LES REQUETES
 // function leagueId(){
@@ -352,7 +368,6 @@ router.get('/fixtures', function(req, res, next) {
   try {
     fixtures().then((matchs) => {
       // console.log("matchs  :  ", matchs);
-
       res.json({ matchs });
     })
   } catch (e) {
