@@ -256,7 +256,7 @@ router.get('/journee/', function(req, res, next) {
         .header("Accept", "application/json")
         .end(function(result) {
           // console.log("fixturesJournee", fixturesJournee);
-          fixturesJournee.push(result.body.api.fixtures);
+          fixturesJournee.push(result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
           //une fois seulement qu'on a récupéré les 6 rencontres
           if (fixturesJournee.length === 6) {
             res.json({round:roundAAfficher, matchs:fixturesJournee});
@@ -289,6 +289,8 @@ router.get('/journee/:round', function(req, res, next) {
       .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
       .header("Accept", "application/json")
       .end(function (result) {
+        //fixtures est un objet avec une props id équipe contenant un objet
+        //on récupère le seul élement du tableau (Object.keys. ici une seule)
         console.log("fixturesJournee", result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
         fixturesJournee.push(result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
         //une fois seulement qu'on a récupéré les 6 rencontres
