@@ -417,7 +417,8 @@ router.get('/fixtures/team/:id', function(req, res) {
     .header("Accept", "application/json")
     .end(function(result) {
       console.log("LEAGUE 207 STAT : ", result.body);
-      res.json({resultat: result.body.api})
+      var matchs = result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]];
+      res.json({nombreMatchs: result.body.api.results, matchs: matchs })
     });
 });
 
