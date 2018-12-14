@@ -55,11 +55,11 @@ const TeamModel = mongoose.model('teams', teamSchema);
 
 const journeeSchema = mongoose.Schema({
     round : Number,
-    timestampMin : Number,
     timestampMax : Number,
     fixtures : [
       {
         fixture_api_id : Number,
+        fixture_timestamp : Number,
       }
     ]
 });
@@ -108,7 +108,6 @@ router.post('/teams', function(req, res, next) {
 
 /********************   ajout des journees   ***********************/
 router.post('/journees', function(req, res, next) {
-  var timestamps=[] ;
   for (var i = 1; i <= 22; i++) {
     var newJournee = new JourneeModel({
       round: i,
@@ -118,7 +117,7 @@ router.post('/journees', function(req, res, next) {
         console.error(error);
       } else {
         console.log({
-          journee: journee
+          // journee: journee
         });
       };
     });
@@ -132,11 +131,7 @@ router.post('/journees', function(req, res, next) {
       var timeMax;
       var timeMin;
       for (var z in matchs) {
-        //on récupère le round
-        timestamps.push(matchs[z].event_timestamp);
-        // console.log ("timestamps : ", timestamps);
-        timeMax = Math.max(...timestamps);
-        timeMin = Math.min(...timestamps);
+        //RECUPERATION DE LA JOURNEE
         //crée un tableau de tous les mots sans les espaces
         var roundS = matchs[z].round.split(' ');
         //récupère le dernier élément du tableau >> le numéro de la journée
@@ -144,16 +139,16 @@ router.post('/journees', function(req, res, next) {
         // console.log("roundN : ", roundN);
         // var roundN = parseInt(matchs[z].round.substring(28));
         // console.log("roundN : ", roundN);
+        //AJOUT DES MATCHS
         JourneeModel.findOneAndUpdate({
           round: roundN
         }, {
-          timestampMin : timeMax,
-          timestampMax : timeMin,
           $push: {
             fixtures: {
-              fixture_api_id: matchs[z].fixture_id
+              fixture_api_id: matchs[z].fixture_id,
+              fixture_timestamp :matchs[z].event_timestamp
             }
-          }
+          },timestampMax: matchs[z].event_timestamp
         }, {
           new: true
         }, (error, journee) => {
@@ -197,6 +192,83 @@ router.get('/journees/', function(req, res, next) {
 });
 
 
+//  **********        RECUPERATION DE LA JOURNEE LA PLUS PROCHE  *********    ////////////////
+router.get('/journee/', function(req, res, next) {
+  //maintenant
+  var ts = Date.now() / 1000;
+  console.log(ts);
+  JourneeModel.find(function(error, journees) {
+    if (error) {
+      console.log(error);
+    }
+    var journeesTab = journees.map(e => {
+      return {
+        round: e.round,
+        diffTemps: parseInt(ts - e.timestampMax)
+      }
+    });
+    var roundAAfficher;
+    var journeesAnte = []; //tableau qui va stocker les journées passées
+    var tabJournees = [...journeesTab]
+    console.log("les journeesTab  : ", tabJournees);
+
+    for (z in tabJournees) {
+      console.log(z);
+      if (tabJournees[z].diffTemps > 0) {
+        console.log(tabJournees[z]);
+        //on récupère uniquement les journées passées
+        journeesAnte.push(tabJournees[z])
+      }
+    }
+    // console.log("journées anté  : ", journeesAnte);
+    //on trie les journées pour trouver la plus proche de notre ts
+    journeesAnte.sort(function(a, b) {
+      return a.diffTemps - b.diffTemps
+    })
+
+    console.log("journées anté après sort: ", journeesAnte);
+    //si la journée passée est passée depuis plus de 2.5 jours (216000 secondes)
+    if (journeesAnte[0].diffTemps - 216000 < 0) {
+      roundAAfficher = journeesAnte[0].round
+    } else {
+      //sinon on affiche la journée suivante
+      roundAAfficher = journeesAnte[0].round + 1;
+    }
+    console.log("round à afficher  : ", roundAAfficher);
+
+    var fixturesJournee = [];
+    JourneeModel.find({
+      round: roundAAfficher
+    }, function(err, journee) {
+      // res.json({journee})
+      if (err) {
+        console.log(error);
+      }
+      // console.log("les matchs de la journee : ", journee[0].fixtures[0].fixture_api_id)
+      var matchsJournee = journee[0].fixtures;
+      for (var z of matchsJournee) {
+        unirest.get(`https://api-football-v1.p.mashape.com/fixtures/id/${z.fixture_api_id}`)
+        .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
+        .header("Accept", "application/json")
+        .end(function(result) {
+          // console.log("fixturesJournee", fixturesJournee);
+          fixturesJournee.push(result.body.api.fixtures);
+          //une fois seulement qu'on a récupéré les 6 rencontres
+          if (fixturesJournee.length === 6) {
+            res.json({round:roundAAfficher, matchs:fixturesJournee});
+          }
+        });
+        // console.log("z : ", z)
+        // console.log("les id des matchs de la journee : ", z.fixture_api_id)
+      } //fin du for
+      // res.json({fixturesJournee});
+    });
+  });
+});
+
+
+
+
 //  **********        RECUPERATION D'UNE JOURNEE :  1ROUND:  *********    ////////////////
 router.get('/journee/:round', function(req, res, next) {
   var roundi = req.params.round;
@@ -217,7 +289,7 @@ router.get('/journee/:round', function(req, res, next) {
         fixturesJournee.push(result.body.api.fixtures);
         //une fois seulement qu'on a récupéré les 6 rencontres
         if (fixturesJournee.length===6){
-          res.json(fixturesJournee);
+          res.json({round:roundi, matchs:fixturesJournee});
         }
       });
       // console.log("z : ", z)
