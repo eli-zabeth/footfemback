@@ -289,7 +289,7 @@ router.get('/journee/:round', function(req, res, next) {
       .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
       .header("Accept", "application/json")
       .end(function (result) {
-        //fixtures est un objet avec une props id équipe contenant un objet
+        //fixtures est un objet avec une props 'id équipe' contenant un objet avec toutes les props du match
         //on récupère le seul élement du tableau (Object.keys. ici une seule)
         console.log("fixturesJournee", result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
         fixturesJournee.push(result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
@@ -314,8 +314,8 @@ var live = () => {
       .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
       .header("Accept", "application/json")
       .end(function(result) {
-        console.log(result.status);
-        resolve(result.body.api.fixtures);
+        // console.log(result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
+        resolve(result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
       });
   })
 }
