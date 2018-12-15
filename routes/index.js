@@ -217,9 +217,9 @@ router.get('/journee/', function(req, res, next) {
     console.log("les journeesTab  : ", tabJournees);
 
     for (z in tabJournees) {
-      console.log(z);
+      // console.log(z);
       if (tabJournees[z].diffTemps > 0) {
-        console.log(tabJournees[z]);
+        // console.log(tabJournees[z]);
         //on récupère uniquement les journées passées
         journeesAnte.push(tabJournees[z])
       }
@@ -291,7 +291,7 @@ router.get('/journee/:round', function(req, res, next) {
       .end(function (result) {
         //fixtures est un objet avec une props 'id équipe' contenant un objet avec toutes les props du match
         //on récupère le seul élement du tableau (Object.keys. ici une seule)
-        console.log("fixturesJournee", result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
+        // console.log("fixturesJournee", result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
         fixturesJournee.push(result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
         //une fois seulement qu'on a récupéré les 6 rencontres
         if (fixturesJournee.length===6){
@@ -309,13 +309,18 @@ router.get('/journee/:round', function(req, res, next) {
 
 //  **********        RECUPERATION DU LIVE :       *********    //////////////////
 var live = () => {
+  var matchs=[];
   return new Promise(resolve => {
       unirest.get("https://api-football-v1.p.mashape.com/fixtures/live")
       .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
       .header("Accept", "application/json")
       .end(function(result) {
+        for(var z in result.body.api.fixtures ){
+          // console.log("z : ", result.body.api.fixtures[z]);
+          matchs.push(result.body.api.fixtures[z])
+        }
         // console.log(result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
-        resolve(result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
+        resolve(matchs);
       });
   })
 }
@@ -354,14 +359,19 @@ router.get('/live', function(req, res, next) {
 
 //   **********        RECUPERATION DES MATCHS :  FIXTURES :  *********    //////////////////
 var fixtures = () => {
+  var matchs=[];
   return new Promise(resolve => {
     unirest.get(`https://api-football-v1.p.mashape.com/fixtures/league/${saisonEnCoursD1}`)
       .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
       .header("Accept", "application/json")
       .end(function(result) {
+        for(var z in result.body.api.fixtures ){
+          // console.log("z : ", result.body.api.fixtures[z]);
+          matchs.push(result.body.api.fixtures[z])
+        }
         //nb de matchs récupérés : result.body.api.results >> 132, 11/équipes
         // console.log("LEAGUE 207 RENCONTRES : ", result.body.api.fixtures);
-        resolve(result.body.api.fixtures);
+        resolve(matchs);
       });
   })
 }
@@ -411,13 +421,19 @@ router.get('/standings', function(req, res, next) {
 router.get('/fixtures/team/:id', function(req, res) {
   console.log ("route fixtures/team")
   var team= req.params.id;
+  var matchs=[];
   // console.log("req.params.teamApi_id : ", req.params.id)
   unirest.get(`https://api-football-v1.p.mashape.com/fixtures/team/${team}`)
     .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
     .header("Accept", "application/json")
     .end(function(result) {
-      console.log("LEAGUE 207 STAT : ", result.body);
-      var matchs = result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]];
+      for(var z in result.body.api.fixtures ){
+        // console.log("z : ", result.body.api.fixtures[z]);
+        matchs.push(result.body.api.fixtures[z])
+      }
+      // console.log("LEAGUE 207 STAT : ", result.body.api.fixtures);
+      // console.log(result.body.api.fixtures[Object.keys(result.body.api.fixtures));
+      // matchs.push(result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
       res.json({nombreMatchs: result.body.api.results, matchs: matchs })
     });
 });
@@ -434,7 +450,7 @@ router.get('/statistics/:id', function(req, res) {
     .header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
     .header("Accept", "application/json")
     .end(function(result) {
-      console.log("LEAGUE 207 STAT : ", result.body);
+      // console.log("LEAGUE 207 STAT : ", result.body);
       res.json({result: result.body.api.stats})
     });
 });
