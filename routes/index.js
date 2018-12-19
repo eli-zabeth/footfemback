@@ -200,7 +200,7 @@ router.get('/journees/', function(req, res, next) {
 router.get('/journee/', function(req, res, next) {
   //maintenant
   var ts = Date.now() / 1000;
-  console.log(ts);
+  // console.log(ts);
   JourneeModel.find(function(error, journees) {
     if (error) {
       console.log(error);
@@ -269,6 +269,10 @@ router.get('/journee/', function(req, res, next) {
     });
   });
 });
+
+
+
+
 
 
 
@@ -436,6 +440,27 @@ router.get('/fixtures/team/:id', function(req, res) {
       // matchs.push(result.body.api.fixtures[Object.keys(result.body.api.fixtures)[0]]);
       res.json({nombreMatchs: result.body.api.results, matchs: matchs })
     });
+});
+
+
+
+//   **********        RECUPERATION D'UN MATCH  *********    //////////////////
+router.get('/fixture/:id', function(req, res) {
+  var matchId= req.params.id;
+unirest.get(`https://api-football-v1.p.mashape.com/fixtures/id/${matchId}`)
+.header("X-Mashape-Key", "LdHFSLCfdImsh1iG2dq2n8N0OGP5p1ETW3ajsnoC5PKR3q777c")
+.header("Accept", "application/json")
+.end(function(result) {
+  // console.log(result);
+  const getNestedObject = (nestedObj, pathArr) => {
+          return pathArr.reduce((obj, key) =>
+          (obj && obj[key] !== 'undefined') ? obj[key] : undefined, nestedObj);
+        }
+    const match = getNestedObject(result.body.api, ['fixtures', matchId]);
+
+    res.json({match: match});
+
+});
 });
 
 
